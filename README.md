@@ -13,3 +13,5 @@ After this ,just run the following code -
 
 Although example.py contains a few regex expressions, they have got nothing to do, since i changed the code in the main file, that is, pdf-redactor.py. 
 This is the first version, and hence a bit bulky with a lot of files and a lot of code. In due course of time, I'll reduce the number of files and and remove redundant code.
+
+The code has the same limitations as the base repository.
