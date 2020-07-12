@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spotlight-model-service
+spec:
+  selector:
+    app: spotlight-model
+  ports:
+  - protocol: TCP
+    port: 5001
+    targetPort: 5001
+  type: LoadBalancer
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-deployment
+  labels:
+    app: spotlight-model
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spotlight-model
+  template:
+    metadata:
+      labels:
+        app: spotlight-model
+    spec:
+      containers:
+      - name: spotlight-model
+        image: 553443767398.dkr.ecr.us-east-1.amazonaws.com/spotlight-model:latest
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: dev-secrets
+              key: aws-access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-secrets
+              key: aws-secret-key
+        - name: API_HOST
+          value: spotlight-api-service
+        - name: API_PORT
+          value: '5000'
+        - name: MODEL_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-secrets
+              key: model-key
+        ports:
+        - containerPort: 5001

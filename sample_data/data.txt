@@ -1,0 +1,5 @@
+﻿Finance capitals limited
+
+The issuer of this doc is Finance capitals. The investors are Alpha corporation and Beta Corporation.
+The amounts invested are as follows- Alpha : $1111 and Beta : $2323.
+
