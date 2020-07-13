@@ -1,6 +1,7 @@
 # A general-purpose PDF text-layer redaction tool.
 from loguru import logger
 import sys
+import time
 from datetime import datetime
 from core import util
 from pdfrw import PdfDict
@@ -724,58 +725,73 @@ def update_text_layer(options, text_tokens, page_tokens):
 		pii_type = item.get('pii_type')
 		logger.info(f'{item.get("pii_type")}: {text_content[item.get("start_location"):item.get("end_location")]} '
 					f'({round(item.get("confidence"), 2) * 100}%)')
+	try:
+		while True:
+			str_red=set(map(int,input('Enter the choices').split('')))
+			if (str_red.strip()):
+				break
+	except EOFError:
+		str_red=[2]		
 
-		i1 = item.get("start_location")
-		i2 = item.get("end_location")
+
+	for i in range(0,len(str_red)):
+		if(str_red[i]>0 and str_red[i]<len(pii)):
+			item=pii[str_red[i]]
+			i1 = item.get("start_location")
+			i2 = item.get("end_location")
 
 			# Pass the matched text to the replacement function to get replaced text.
-		replacement = 'u'*(i2-i1)
-		assert(i2>i1)
+			replacement = 'u'*(i2-i1)
+			assert(i2>i1)
 			# Do a text replacement in the tokens that produced this text content.
 			# It may have been produced by multiple tokens, so loop until we find them all.
-		while i1 < i2:
+			while i1 < i2:
 				# Find the original tokens in the content stream that
 				# produced the matched text. Start by advancing over any
 				# tokens that are entirely before this span of text.
-			while text_tokens_index < len(text_tokens) and \
-				    text_tokens_charpos + len(text_tokens[text_tokens_index].value)-text_tokens_token_xdiff <= i1:
-				text_tokens_charpos += len(text_tokens[text_tokens_index].value)-text_tokens_token_xdiff
-				text_tokens_index += 1
-				text_tokens_token_xdiff = 0
-			if text_tokens_index == len(text_tokens): break
+				while text_tokens_index < len(text_tokens) and \
+				    	text_tokens_charpos + len(text_tokens[text_tokens_index].value)-text_tokens_token_xdiff <= i1:
+					text_tokens_charpos += len(text_tokens[text_tokens_index].value)-text_tokens_token_xdiff
+					text_tokens_index += 1
+					text_tokens_token_xdiff = 0
+				if text_tokens_index == len(text_tokens): break
 			# assert(text_tokens_charpos <= i1)
 
 				# The token at text_tokens_index, and possibly subsequent ones,
 				# are responsible for this text. Replace the matched content
 				# here with replacement content.
-			tok = text_tokens[text_tokens_index]
+				tok = text_tokens[text_tokens_index]
 
 				# Where does this match begin within the token's text content?
-			mpos = i1 - text_tokens_charpos
+				mpos = i1 - text_tokens_charpos
 			# assert mpos >= 0
 
 				# How long is the match within this token?
-			mlen = min(i2-i1, len(tok.value)-text_tokens_token_xdiff-mpos)
+				mlen = min(i2-i1, len(tok.value)-text_tokens_token_xdiff-mpos)
 			# assert mlen >= 0
 
 				# How much should we replace here?
-			if mlen < (i2-i1):
+				if mlen < (i2-i1):
 					# There will be more replaced later, so take the same number
 					# of characters from the replacement text.
-				r = replacement[:mlen]
-				replacement = replacement[mlen:]
-			else:
+					r = replacement[:mlen]
+					replacement = replacement[mlen:]
+				else:
 					# This is the last token in which we'll replace text, so put
 					# all of the remaining replacement content here.
-				r = replacement
-				replacement = None # sanity
+					r = replacement
+					replacement = None # sanity
 
 				# Do the replacement.
-			tok.value = tok.value[:mpos+text_tokens_token_xdiff] + r + tok.value[mpos+mlen+text_tokens_token_xdiff:]
-			text_tokens_token_xdiff += len(r) - mlen
+				tok.value = tok.value[:mpos+text_tokens_token_xdiff] + r + tok.value[mpos+mlen+text_tokens_token_xdiff:]
+				text_tokens_token_xdiff += len(r) - mlen
 
 				# Advance for next iteration.
-			i1 += mlen
+				i1 += mlen
+	else:
+		print("Invalid index for iteration {}".format(i))
+
+
 
 def apply_updated_text(document, text_tokens, page_tokens):
 	# Create a new content stream for each page by concatenating the
