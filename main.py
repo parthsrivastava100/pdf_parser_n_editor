@@ -1,5 +1,6 @@
 import csv
-
+import re
+import pdf_redactor
 import nltk
 from dotenv import find_dotenv, load_dotenv
 from loguru import logger
@@ -95,22 +96,34 @@ def csv_to_pii(file):
 if __name__ == "__main__":
     DIRECTORY = './sample_data/'
     
-    input_file = 'nikita_file.txt'
+    input_file = 'cc.pdf'
     
     text_file = f'{DIRECTORY}{input_file}'
+    if(input_file.endswith('.pdf')):
+        options = pdf_redactor.RedactorOptions()
+        options.xmp_filters = [lambda xml : None]
+        options.content_filters = [
+	    (
+		re.compile(r"comment!"),
+		lambda m : "annotation?"
+	    ),
+        ]
+        pdf_redactor.redactor(options,text_file)
+    else:
+
     
-    logger.info(f'Scanning PII in {input_file}')
+        logger.info(f'Scanning PII in {input_file}')
     
-    text = open(text_file, 'r').read()
+        text = open(text_file, 'r').read()
     
-    logger.debug(f'Scanning text: {text}')
+        logger.debug(f'Scanning text: {text}')
     
-    pii = text_to_pii(text)
+        pii = text_to_pii(text)
     
-    logger.debug(f'PII Detected: {pii}')
+        logger.debug(f'PII Detected: {pii}')
     
-    for item in pii:
-        pii_type = item.get('pii_type')
+        for item in pii:
+            pii_type = item.get('pii_type')
         
-        logger.info(f'{item.get("pii_type")}: {text[item.get("start_location"):item.get("end_location")]} '
+            logger.info(f'{item.get("pii_type")}: {text[item.get("start_location"):item.get("end_location")]} '
                     f'({round(item.get("confidence"), 2) * 100}%)')

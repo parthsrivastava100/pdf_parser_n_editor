@@ -37,14 +37,14 @@ def combine_regex_and_context(regex_matches, context_matches, pii_type):
                 while(True):
                     if((str_data[flag:flag+l_word])==word):
                         if(tagg[0][i][1]=='NNP'):
-                            if(best_confidence>0.4):
+                            if(best_confidence>0.45):
                                 final_matches.append(format_pii_object(re_start+flag,re_start+flag+l_word,pii_type,best_confidence))
                         flag=flag+l_word
                         break
                     else:
                         flag=flag+1
         else:
-            if(best_confidence>0.4):
+            if(best_confidence>0.45):
                 final_matches.append(format_pii_object(re_start, re_end, pii_type, best_confidence))
     
     return final_matches

@@ -83,24 +83,24 @@ class RedactorOptions:
 	link_filters = []
 
 
-def redactor(options):
+def redactor(options,file_name):
 	# This is the function that performs redaction.
 
-	if sys.version_info < (3,):
-		if options.input_stream is None:
-			options.input_stream = sys.stdin # input stream containing the PDF to redact
-		if options.output_stream is None:
-			options.output_stream = sys.stdout # output stream to write the new, redacted PDF to
-	else:
-		if options.input_stream is None:
-			options.input_stream = sys.stdin.buffer # input byte stream containing the PDF to redact
-		if options.output_stream is None:
-			options.output_stream = sys.stdout.buffer # output byte stream to write the new, redacted PDF to
+	# if sys.version_info < (3,):
+	# 	if options.input_stream is None:
+	# 		options.input_stream = sys.stdin # input stream containing the PDF to redact
+	# 	if options.output_stream is None:
+	# 		options.output_stream = sys.stdout # output stream to write the new, redacted PDF to
+	# else:
+	# 	if options.input_stream is None:
+	# 		options.input_stream = sys.stdin.buffer # input byte stream containing the PDF to redact
+	# 	if options.output_stream is None:
+	# 		options.output_stream = sys.stdout.buffer # output byte stream to write the new, redacted PDF to
 
 	from pdfrw import PdfReader, PdfWriter
 
 	# Read the PDF.
-	document = PdfReader(options.input_stream)
+	document = PdfReader(file_name)
 
 	# Modify its Document Information Dictionary metadata.
 	update_metadata(document, options)
@@ -119,12 +119,12 @@ def redactor(options):
 		apply_updated_text(document, *text_layer)
 
 	# Update annotations.
-	update_annotations(document, options)
+	
 
 	# Write the PDF back out.
 	writer = PdfWriter()
 	writer.trailer = document
-	writer.write(options.output_stream)
+	writer.write('result.pdf')
 
 
 def update_metadata(trailer, options):
@@ -725,23 +725,16 @@ def update_text_layer(options, text_tokens, page_tokens):
 		pii_type = item.get('pii_type')
 		logger.info(f'{item.get("pii_type")}: {text_content[item.get("start_location"):item.get("end_location")]} '
 					f'({round(item.get("confidence"), 2) * 100}%)')
-	try:
-		while True:
-			str_red=set(map(int,input('Enter the choices').split('')))
-			if (str_red.strip()):
-				break
-	except EOFError:
-		str_red=[2]		
 
-
-	for i in range(0,len(str_red)):
-		if(str_red[i]>0 and str_red[i]<len(pii)):
+	str_red=list(map(int,input('Enter the indexes of the choices you want to redact(base 0)').split(' ')))
+	for i in range(0,len(str_red)):		
+		if(str_red[i]>=0 and str_red[i]<len(pii)):   	
 			item=pii[str_red[i]]
 			i1 = item.get("start_location")
 			i2 = item.get("end_location")
 
 			# Pass the matched text to the replacement function to get replaced text.
-			replacement = 'u'*(i2-i1)
+			replacement = 'X'*(i2-i1)
 			assert(i2>i1)
 			# Do a text replacement in the tokens that produced this text content.
 			# It may have been produced by multiple tokens, so loop until we find them all.

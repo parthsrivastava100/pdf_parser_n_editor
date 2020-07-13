@@ -7,7 +7,7 @@ class CompanyParser(RegexParser):
     def __init__(self):
         regex_patterns = {
             r'((?:\w[\ ]?)+): \$': 0.4,   #   'demo company - $' format 
-             r'((?:\w[\ ]?)+)': 0.02,
+             r'((?:\w[\ ]?)+)': 0.009,
                      
         }
         keywords = {'Issuer': 0.9, 'Investor': 0.9,'Stock':0.5,'Issuers':0.9,'Investors':0.9}

@@ -25,34 +25,11 @@ options = pdf_redactor.RedactorOptions()
 
 # Clear any XMP metadata, if present.
 options.xmp_filters = [lambda xml : None]
-
-# Redact things that look like social security numbers, replacing the
-# text with X's.
 options.content_filters = [
-	# First convert all dash-like characters to dashes.
-	(
-		re.compile(u"[−–—~‐]"),
-		lambda m : "-"
-	),
-
-	# Then do an actual SSL regex.
-	# See https://github.com/opendata/SSN-Redaction for why this regex is complicated.
-	(
-		re.compile(r"((?:\w[\ ]?)+)"),
-		lambda m : "XXX-XX-XXXX"
-	),
-
-	# Content filter that runs on the text comment annotation body.
 	(
 		re.compile(r"comment!"),
 		lambda m : "annotation?"
 	),
 ]
 
-# Filter the link target URI.
-options.link_filters = [
-	lambda href, annotation : "https://www.google.com" 
-]
-
-# Perform the redaction using PDF on standard input and writing to standard output.
 pdf_redactor.redactor(options)
